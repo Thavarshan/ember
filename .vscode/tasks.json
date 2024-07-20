@@ -29,6 +29,21 @@
         "isDefault": true
       },
       "dependsOn": "CMake: configure"
+    },
+    {
+      "label": "CMake: run tests",
+      "command": "ctest",
+      "args": [
+        "--output-on-failure"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/build"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
     }
   ]
 }
