@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stdexcept>
 
+namespace db {
+
 Connection::Connection(const std::string &db_path) {
   int result = sqlite3_open(db_path.c_str(), &db);
 
@@ -15,3 +17,5 @@ Connection::Connection(const std::string &db_path) {
 Connection::~Connection() { sqlite3_close(db); }
 
 sqlite3 *Connection::get_db() const { return db; }
+
+}  // namespace db

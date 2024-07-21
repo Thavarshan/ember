@@ -154,4 +154,5 @@ std::string Request::toString() const {
   requestStream << "\r\n" << body;
   return requestStream.str();
 }
+
 }  // namespace http

@@ -6,6 +6,12 @@
 #include <string>
 
 /**
+ * @namespace db
+ * Namespace for DB related classes and functions.
+ */
+namespace db {
+
+/**
  * @brief Represents a connection to a SQLite database.
  *
  * This class provides an abstraction over the sqlite3* handle, managing
@@ -43,5 +49,7 @@ class Connection {
    */
   sqlite3 *db;
 };
+
+}  // namespace db
 
 #endif  // CONNECTION_HPP
