@@ -84,7 +84,7 @@ ember/
 ### Clone the Repository
 
 ```sh
-git clone https://github.com/yourusername/ember.git
+git clone https://github.com/Thavarshan/ember.git
 cd ember
 ```
 
