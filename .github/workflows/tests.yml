@@ -18,8 +18,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up CMake
-      uses: actions/setup-cmake@v3
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install CMake
+      run: |
+        pip install cmake
 
     - name: Set up dependencies
       run: |
