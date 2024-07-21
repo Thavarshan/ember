@@ -25,9 +25,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Link SQLite3 library
 target_link_libraries(${PROJECT_NAME} ${SQLite3_LIBRARIES})
 
-# GoogleTest requires at least C++14
-set(CMAKE_CXX_STANDARD 14)
-
 # Add Google Test
 add_subdirectory(googletest)
 
@@ -37,12 +34,20 @@ enable_testing()
 # Add test source files
 file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
 
-# Create test executable
-add_executable(runUnitTests ${TEST_SOURCES})
+# Add the implementation files needed for tests
+set(TEST_IMPLEMENTATION_SOURCES
+    src/http/request.cpp
+)
 
-# Link test executable against gtest & gtest_main
+# Create test executable
+add_executable(runUnitTests ${TEST_SOURCES} ${TEST_IMPLEMENTATION_SOURCES})
+
+# Link test executable against gtest & gtest_main and SQLite3 libraries
 target_link_libraries(runUnitTests gtest gtest_main ${SQLite3_LIBRARIES})
 
 # Add tests
 include(GoogleTest)
 gtest_discover_tests(runUnitTests)
+
+# Ensure that tests are discovered and run
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --verbose)

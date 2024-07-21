@@ -1,8 +1,9 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include <string>
 #include <sqlite3.h>
+
+#include <string>
 
 /**
  * @brief Represents a connection to a SQLite database.
@@ -11,11 +12,11 @@
  * the lifetime of the connection to the database. It allows for opening
  * and closing the database connection in a RAII manner.
  */
-class Connection
-{
-public:
+class Connection {
+ public:
   /**
-   * @brief Constructs a new Connection object and opens a connection to the specified database.
+   * @brief Constructs a new Connection object and opens a connection to the
+   * specified database.
    *
    * @param db_path The path to the database file.
    *
@@ -24,7 +25,8 @@ public:
   Connection(const std::string &db_path);
 
   /**
-   * @brief Destroys the Connection object, ensuring the database connection is closed properly.
+   * @brief Destroys the Connection object, ensuring the database connection is
+   * closed properly.
    */
   ~Connection();
 
@@ -35,11 +37,11 @@ public:
    */
   sqlite3 *get_db() const;
 
-private:
+ private:
   /**
    * @brief The sqlite3 database handle.
    */
   sqlite3 *db;
 };
 
-#endif // CONNECTION_HPP
+#endif  // CONNECTION_HPP
