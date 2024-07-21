@@ -16,11 +16,12 @@ find_package(SQLite3 REQUIRED)
 # Include directories for SQLite3
 include_directories(${SQLite3_INCLUDE_DIRS})
 
-# Source files
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+# Source files for the main executable, excluding main.cpp
+file(GLOB_RECURSE MAIN_SOURCES "src/*.cpp")
+list(REMOVE_ITEM MAIN_SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
-# Add the executable
-add_executable(${PROJECT_NAME} ${SOURCES})
+# Add the main executable
+add_executable(${PROJECT_NAME} ${MAIN_SOURCES} src/main.cpp)
 
 # Link SQLite3 library
 target_link_libraries(${PROJECT_NAME} ${SQLite3_LIBRARIES})
@@ -34,13 +35,12 @@ enable_testing()
 # Add test source files
 file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
 
-# Add the implementation files needed for tests
-set(TEST_IMPLEMENTATION_SOURCES
-    src/http/request.cpp
-)
+# Add the implementation files needed for tests, excluding main.cpp
+file(GLOB_RECURSE TEST_IMPLEMENTATION_SOURCES "src/*.cpp")
+list(REMOVE_ITEM TEST_IMPLEMENTATION_SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
-# Create test executable
-add_executable(runUnitTests ${TEST_SOURCES} ${TEST_IMPLEMENTATION_SOURCES})
+# Create test executable with unified main.cpp
+add_executable(runUnitTests tests/main.cpp ${TEST_SOURCES} ${TEST_IMPLEMENTATION_SOURCES})
 
 # Link test executable against gtest & gtest_main and SQLite3 libraries
 target_link_libraries(runUnitTests gtest gtest_main ${SQLite3_LIBRARIES})
