@@ -522,3 +522,4 @@ CTestTestfile.cmake
 _deps
 main
 scratch.cpp
+/build/
