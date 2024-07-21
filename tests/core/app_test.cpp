@@ -4,62 +4,73 @@
 
 #include "request.hpp"
 #include "response.hpp"
+#include "router.hpp"
 
-using namespace core;
 using namespace http;
+using namespace router;
+using namespace core;
 
-TEST(AppTest, RegisterAndRetrieveRoute) {
-  App app;
+class AppTest : public ::testing::Test {
+ protected:
+  core::App app;
 
-  // Register a route
-  app.registerRoute("GET", "/home", [](const Request& request) {
-    return Response(200, "OK", "Home Page", {{"Content-Type", "text/html"}});
-  });
+  static Response sampleHandler(const Request &request) {
+    return Response(200, "OK", "Sample response",
+                    {{"Content-Type", "text/plain"}});
+  }
 
-  // Check if the route is registered correctly
-  auto routes = app.getRoutes();
-  auto it = routes.find("GET:/home");
-  ASSERT_NE(it, routes.end());
-  ASSERT_EQ(it->first, "GET:/home");
+  void SetUp() override {
+    app.getRouter().addRoute("GET", "/sample", sampleHandler);
+  }
+};
 
-  // Invoke the handler and check the response
-  Request request("GET", "/home", "HTTP/1.1", "", {});
-  Response response = it->second(request);
-  ASSERT_EQ(response.getStatusCode(), 200);
-  ASSERT_EQ(response.getStatusMessage(), "OK");
-  ASSERT_EQ(response.getBody(), "Home Page");
-  ASSERT_EQ(response.getHeader("Content-Type"), "text/html");
+TEST_F(AppTest, RegisterAndRetrieveRoute) {
+  Request request("GET", "/sample", "HTTP/1.1", "", {});
+  Response response = app.getRouter().handle(request);
+  EXPECT_EQ(response.getStatusCode(), 200);
+  EXPECT_EQ(response.getStatusMessage(), "OK");
+  EXPECT_EQ(response.getBody(), "Sample response");
 }
 
-TEST(AppTest, RegisterMultipleRoutes) {
-  App app;
-
-  // Register multiple routes
-  app.registerRoute("GET", "/home", [](const Request& request) {
-    return Response(200, "OK", "Home Page", {{"Content-Type", "text/html"}});
-  });
-  app.registerRoute("POST", "/submit", [](const Request& request) {
-    return Response(201, "Created", "Submission Received",
+TEST_F(AppTest, RegisterMultipleRoutes) {
+  app.getRouter().addRoute("POST", "/submit", [](const Request &request) {
+    return Response(200, "OK", "POST response",
                     {{"Content-Type", "text/plain"}});
   });
 
-  // Check if the routes are registered correctly
-  auto routes = app.getRoutes();
-  ASSERT_NE(routes.find("GET:/home"), routes.end());
-  ASSERT_NE(routes.find("POST:/submit"), routes.end());
-
-  // Invoke the handlers and check the responses
-  Request getRequest("GET", "/home", "HTTP/1.1", "", {});
-  Response getResponse = routes["GET:/home"](getRequest);
-  ASSERT_EQ(getResponse.getStatusCode(), 200);
-  ASSERT_EQ(getResponse.getStatusMessage(), "OK");
-  ASSERT_EQ(getResponse.getBody(), "Home Page");
-  ASSERT_EQ(getResponse.getHeader("Content-Type"), "text/html");
+  Request getRequest("GET", "/sample", "HTTP/1.1", "", {});
+  Response getResponse = app.getRouter().handle(getRequest);
+  EXPECT_EQ(getResponse.getStatusCode(), 200);
+  EXPECT_EQ(getResponse.getStatusMessage(), "OK");
+  EXPECT_EQ(getResponse.getBody(), "Sample response");
 
   Request postRequest("POST", "/submit", "HTTP/1.1", "", {});
-  Response postResponse = routes["POST:/submit"](postRequest);
-  ASSERT_EQ(postResponse.getStatusCode(), 201);
-  ASSERT_EQ(postResponse.getStatusMessage(), "Created");
-  ASSERT_EQ(postResponse.getBody(), "Submission Received");
-  ASSERT_EQ(postResponse.getHeader("Content-Type"), "text/plain");
+  Response postResponse = app.getRouter().handle(postRequest);
+  EXPECT_EQ(postResponse.getStatusCode(), 200);
+  EXPECT_EQ(postResponse.getStatusMessage(), "OK");
+  EXPECT_EQ(postResponse.getBody(), "POST response");
+}
+
+TEST_F(AppTest, HandleUnknownRoute) {
+  Request request("GET", "/unknown", "HTTP/1.1", "", {});
+  Response response = app.getRouter().handle(request);
+  EXPECT_EQ(response.getStatusCode(), 404);
+  EXPECT_EQ(response.getStatusMessage(), "Not Found");
+}
+
+TEST_F(AppTest, RouteHandlerCalledWithCorrectRequest) {
+  bool handlerCalled = false;
+  app.getRouter().addRoute("GET", "/test",
+                           [&handlerCalled](const Request &request) {
+                             handlerCalled = true;
+                             return Response(200, "OK", "Test response",
+                                             {{"Content-Type", "text/plain"}});
+                           });
+
+  Request request("GET", "/test", "HTTP/1.1", "", {});
+  Response response = app.getRouter().handle(request);
+  EXPECT_EQ(response.getStatusCode(), 200);
+  EXPECT_EQ(response.getStatusMessage(), "OK");
+  EXPECT_EQ(response.getBody(), "Test response");
+  EXPECT_TRUE(handlerCalled);
 }

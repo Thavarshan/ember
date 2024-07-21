@@ -2,11 +2,11 @@
 #define APP_HPP
 
 #include <functional>
-#include <map>
 #include <string>
 
 #include "request.hpp"
 #include "response.hpp"
+#include "router.hpp"
 
 /**
  * @namespace core
@@ -14,8 +14,21 @@
  */
 namespace core {
 
+/**
+ * @class App
+ * @brief Represents the application and its routes.
+ *
+ * This class manages the registration of routes and delegates request handling
+ * to the router.
+ */
 class App {
  public:
+  /**
+   * @brief Default constructor.
+   * Initializes a new instance of the App class.
+   */
+  App();
+
   /**
    * @brief Registers a route with a corresponding handler.
    *
@@ -28,17 +41,21 @@ class App {
       const std::function<http::Response(const http::Request &)> &handler);
 
   /**
-   * @brief Gets the registered routes.
+   * @brief Get the Router object
    *
-   * @return A map of routes to their handlers.
+   * @return router::Router&
    */
-  const std::map<std::string,
-                 std::function<http::Response(const http::Request &)>> &
-  getRoutes() const;
+  router::Router &getRouter();
+
+  /**
+   * @brief Gets the router (const version).
+   *
+   * @return The router managing the routes.
+   */
+  const router::Router &getRouter() const;
 
  private:
-  std::map<std::string, std::function<http::Response(const http::Request &)>>
-      routes;  ///< Map of routes to their handlers.
+  router::Router router;  ///< The router managing the routes.
 };
 
 }  // namespace core

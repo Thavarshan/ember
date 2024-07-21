@@ -2,6 +2,10 @@
 
 #include <stdexcept>
 
+#include "app.hpp"
+#include "request.hpp"
+#include "response.hpp"
+
 namespace core {
 
 Kernel::Kernel(const App &app) : app(app) {
@@ -9,17 +13,7 @@ Kernel::Kernel(const App &app) : app(app) {
 }
 
 http::Response Kernel::handleRequest(const http::Request &request) {
-  std::string routeKey = request.getMethod() + ":" + request.getUri();
-  const auto &routes = app.getRoutes();
-  auto it = routes.find(routeKey);
-  if (it != routes.end()) {
-    return it->second(request);
-  } else {
-    // Return a 404 Not Found response if the route is not registered
-    return http::Response(404, "Not Found",
-                          "The requested URL was not found on this server.",
-                          {{"Content-Type", "text/plain"}});
-  }
+  return app.getRouter().handle(request);
 }
 
 }  // namespace core

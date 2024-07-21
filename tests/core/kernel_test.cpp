@@ -1,78 +1,89 @@
 #include "kernel.hpp"
 
-#include <gtest/gtest.h>
-
 #include "app.hpp"
+#include "gtest/gtest.h"
 #include "request.hpp"
 #include "response.hpp"
 
 using namespace core;
 using namespace http;
 
-TEST(KernelTest, HandleRegisteredRoute) {
+class KernelTest : public ::testing::Test {
+ protected:
   App app;
-  Kernel kernel(app);
+  Kernel *kernel;
 
-  // Register a route
-  app.registerRoute("GET", "/home", [](const Request& request) {
-    return Response(200, "OK", "Welcome Home",
-                    {{"Content-Type", "text/plain"}});
-  });
+  void SetUp() override {
+    // Initialize the App with some routes
+    app.registerRoute("GET", "/home", [](const Request &request) {
+      return Response(200, "OK", "Home Page", {{"Content-Type", "text/plain"}});
+    });
 
-  // Create a request and handle it
+    app.registerRoute("POST", "/submit", [](const Request &request) {
+      return Response(201, "Created", "Form Submitted",
+                      {{"Content-Type", "text/plain"}});
+    });
+
+    // Initialize the Kernel with the App
+    kernel = new Kernel(app);
+  }
+
+  void TearDown() override {
+    // Clean up the Kernel instance
+    delete kernel;
+  }
+};
+
+TEST_F(KernelTest, HandleRegisteredRoute) {
   Request request("GET", "/home", "HTTP/1.1", "", {});
-  Response response = kernel.handleRequest(request);
+  Response response = kernel->handleRequest(request);
 
-  // Check the response
-  ASSERT_EQ(response.getStatusCode(), 200);
-  ASSERT_EQ(response.getStatusMessage(), "OK");
-  ASSERT_EQ(response.getBody(), "Welcome Home");
-  ASSERT_EQ(response.getHeader("Content-Type"), "text/plain");
+  EXPECT_EQ(response.getStatusCode(), 200);
+  EXPECT_EQ(response.getStatusMessage(), "OK");
+  EXPECT_EQ(response.getBody(), "Home Page");
+  EXPECT_EQ(response.getHeader("Content-Type"), "text/plain");
 }
 
-TEST(KernelTest, HandleUnregisteredRoute) {
-  App app;
-  Kernel kernel(app);
-
-  // Create a request for an unregistered route
+TEST_F(KernelTest, HandleUnregisteredRoute) {
   Request request("GET", "/unknown", "HTTP/1.1", "", {});
-  Response response = kernel.handleRequest(request);
+  Response response = kernel->handleRequest(request);
 
-  // Check the response (should be 404 Not Found)
-  ASSERT_EQ(response.getStatusCode(), 404);
-  ASSERT_EQ(response.getStatusMessage(), "Not Found");
-  ASSERT_EQ(response.getBody(),
+  EXPECT_EQ(response.getStatusCode(), 404);
+  EXPECT_EQ(response.getStatusMessage(), "Not Found");
+  EXPECT_EQ(response.getBody(),
             "The requested URL was not found on this server.");
-  ASSERT_EQ(response.getHeader("Content-Type"), "text/plain");
+  EXPECT_EQ(response.getHeader("Content-Type"), "text/plain");
 }
 
-TEST(KernelTest, HandleMultipleRoutes) {
-  App app;
-  Kernel kernel(app);
-
-  // Register multiple routes
-  app.registerRoute("GET", "/home", [](const Request& request) {
-    return Response(200, "OK", "Welcome Home",
-                    {{"Content-Type", "text/plain"}});
-  });
-  app.registerRoute("POST", "/submit", [](const Request& request) {
-    return Response(201, "Created", "Submission Successful",
-                    {{"Content-Type", "text/plain"}});
-  });
-
-  // Handle GET request
+TEST_F(KernelTest, HandleMultipleRoutes) {
   Request getRequest("GET", "/home", "HTTP/1.1", "", {});
-  Response getResponse = kernel.handleRequest(getRequest);
-  ASSERT_EQ(getResponse.getStatusCode(), 200);
-  ASSERT_EQ(getResponse.getStatusMessage(), "OK");
-  ASSERT_EQ(getResponse.getBody(), "Welcome Home");
-  ASSERT_EQ(getResponse.getHeader("Content-Type"), "text/plain");
+  Response getResponse = kernel->handleRequest(getRequest);
 
-  // Handle POST request
+  EXPECT_EQ(getResponse.getStatusCode(), 200);
+  EXPECT_EQ(getResponse.getStatusMessage(), "OK");
+  EXPECT_EQ(getResponse.getBody(), "Home Page");
+
   Request postRequest("POST", "/submit", "HTTP/1.1", "", {});
-  Response postResponse = kernel.handleRequest(postRequest);
-  ASSERT_EQ(postResponse.getStatusCode(), 201);
-  ASSERT_EQ(postResponse.getStatusMessage(), "Created");
-  ASSERT_EQ(postResponse.getBody(), "Submission Successful");
-  ASSERT_EQ(postResponse.getHeader("Content-Type"), "text/plain");
+  Response postResponse = kernel->handleRequest(postRequest);
+
+  EXPECT_EQ(postResponse.getStatusCode(), 201);
+  EXPECT_EQ(postResponse.getStatusMessage(), "Created");
+  EXPECT_EQ(postResponse.getBody(), "Form Submitted");
+}
+
+TEST_F(KernelTest, RouteHandlerCalledWithCorrectRequest) {
+  app.registerRoute("GET", "/test", [](const Request &request) {
+    EXPECT_EQ(request.getMethod(), "GET");
+    EXPECT_EQ(request.getUri(), "/test");
+    EXPECT_EQ(request.getVersion(), "HTTP/1.1");
+    EXPECT_EQ(request.getBody(), "");
+    return Response(200, "OK", "Test", {{"Content-Type", "text/plain"}});
+  });
+
+  Request request("GET", "/test", "HTTP/1.1", "", {});
+  Response response = kernel->handleRequest(request);
+
+  EXPECT_EQ(response.getStatusCode(), 200);
+  EXPECT_EQ(response.getStatusMessage(), "OK");
+  EXPECT_EQ(response.getBody(), "Test");
 }
