@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Include directories
-include_directories(include)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Find SQLite3
 find_package(SQLite3 REQUIRED)
